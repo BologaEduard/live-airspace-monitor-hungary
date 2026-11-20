@@ -50,3 +50,20 @@ the relevant prompt or request, the resulting change, verification, and any manu
   network access; the CLI is exercised with fake responses and real temporary SQLite files.
 - Limitations: no live collection was run and no new flight recordings were produced.
   Telemetry auditing, trajectory processing, anomaly detection, and the UI remain future work.
+
+## 2026-11-20 — First live collector verification
+
+- Request: fetch live data to verify the completed ingestion pipeline.
+- Ran `collect --credentials credentials.json --max-polls 1`. The sandboxed attempt
+  failed during authentication with a network error and was recorded as such. Retried
+  with network access; authentication and the states request succeeded (HTTP 200).
+- Verified the saved response in local `data/raw/opensky.sqlite3`: API timestamp
+  `2026-11-20T21:35:13Z`, 70 vectors, 61 airborne and 9 on ground. Of the airborne
+  vectors, 59 have non-null position time, coordinates, barometric altitude, velocity,
+  track, and vertical rate. Two airborne position timestamps are older than 30 seconds.
+  Missing-field and stale-position counts are separate checks and may overlap.
+- The response reported 3,998 remaining credits. Both the failed attempt and successful
+  poll remain in the database. Confirmed the database is ignored by Git; no credentials
+  or raw recordings are included in this documentation commit.
+- This is a single live snapshot, not a trajectory dataset. Multi-hour collection and
+  systematic telemetry auditing are still required.
