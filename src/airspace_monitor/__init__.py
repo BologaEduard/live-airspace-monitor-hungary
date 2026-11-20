@@ -1,0 +1,1 @@
+"""Hungarian airspace monitoring package."""

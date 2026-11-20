@@ -2,3 +2,34 @@ credentials.json
 __pycache__/
 *.pyc
 .env
+
+# Local Python environments and tooling
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local recordings and generated results (demo fixtures are tracked explicitly)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+artifacts/models/*
+!artifacts/models/.gitkeep
+artifacts/evaluation/*
+!artifacts/evaluation/.gitkeep
+
+# Local database sidecars and environment variants
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+.env.*
+!.env.example
