@@ -115,3 +115,32 @@ the relevant prompt or request, the resulting change, verification, and any manu
   collection ran for all three hours; final timestamps and poll outcomes must be checked.
 - Collection was still active at this checkpoint. No raw telemetry, derived datasets,
   credentials, or process metadata were included in the commits.
+
+## 2026-11-26 — Kinematic features while recording continues
+
+- Request: make progress alongside the background recording and check its health occasionally.
+- Added spherical geometry helpers, configurable trailing-window kinematics, and the
+  offline `features` CLI. Reused the existing trajectory builder and extracted shared
+  validated observation reading to avoid different live/replay preprocessing paths.
+- Features include signed/absolute turns and rates, path length, net displacement,
+  tortuosity/straightness, a sample-centred spatial radius, descent gradient, vertical
+  acceleration, altitude change, contact age, and the fixed five-feature ML input order.
+- Defaults: 300-second windows, 180-second minimum duration, 8 points, maximum 45-second
+  sample gap, and 120-second segment gap. Window coverage and ML eligibility are distinct.
+  Missing telemetry is not imputed; undefined metrics stay null with quality flags.
+- Verified geometric conventions against the official scikit-learn haversine documentation
+  and GeoPy's mean-earth-radius documentation (linked in README). No new dependency added.
+- AI-generated tests cover north crossings, signed versus absolute turns, closed loops,
+  sample timing, zero speed, window expiry, missing tracks, segment resets, run isolation,
+  causal prefixes, overflow, dateline geometry, repeatable exports, and CLI validation.
+- Verification: **142 tests passed** and Ruff passed. An in-memory naive-heading-subtraction
+  mutation was caught by the north-crossing tests; source files were not modified by it.
+- Live checks during development confirmed 60, 83, 89, then 97 successful polls with no
+  recorded failures. At the 89-poll check the latest completed poll was 11.1 seconds old.
+  The 97-poll prefix audit yielded 8,391 accepted points, of which 6,416 windows had
+  sufficient coverage and 6,365 were ML-input eligible. These are temporary prefix counts.
+- Extended the waiting finalizer to run audit, segmentation, and feature export when the
+  collector exits. Verified the waiting process identity before replacing it; the live
+  collector was not restarted. Finalizer status was confirmed as `waiting_for_collector`.
+- No human manual code corrections supplied in this step. No ML model or anomaly rules
+  implemented yet. Raw data, derived exports, and process metadata remain local and ignored.

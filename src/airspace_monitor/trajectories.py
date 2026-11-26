@@ -1,12 +1,11 @@
 """Incrementally assign accepted observations to causal trajectory segments."""
 
-import json
 import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from airspace_monitor.exports import atomic_text, write_json_line, write_report
-from airspace_monitor.preprocess import Observation
+from airspace_monitor.preprocess import Observation, read_observations
 
 
 @dataclass
@@ -99,14 +98,7 @@ def segment_observations(
         raise ValueError("Trajectory output must not overwrite the input observations.")
     # Capture the opened file before exports. An audit's atomic replacement cannot change it.
     with observations_path.open(encoding="utf-8") as source, atomic_text(points_path) as target:
-        for line_number, line in enumerate(source, 1):
-            try:
-                payload = json.loads(line)
-                if not isinstance(payload, dict):
-                    raise ValueError
-                observation = Observation(**payload)
-            except (ValueError, TypeError, OverflowError):
-                raise ValueError(f"Invalid observation at JSONL line {line_number}.") from None
+        for observation in read_observations(source):
             point = builder.add(observation)
             if point is not None:
                 write_json_line(target, point)

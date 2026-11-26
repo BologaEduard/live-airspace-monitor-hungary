@@ -4,8 +4,10 @@ import json
 import math
 import re
 from collections import Counter
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import TextIO
 
 from airspace_monitor.exports import atomic_text, write_json_line, write_report
 from airspace_monitor.recordings import RecordingReader
@@ -97,6 +99,19 @@ class Observation:
     @property
     def analysis_eligible(self) -> bool:
         return not self.missing_analysis_fields
+
+
+def read_observations(source: TextIO) -> Iterator[Observation]:
+    """Validate each JSONL line in arrival order, without looking ahead."""
+    for line_number, line in enumerate(source, 1):
+        try:
+            payload = json.loads(line)
+            if not isinstance(payload, dict):
+                raise ValueError
+            observation = Observation(**payload)
+        except (ValueError, TypeError, OverflowError):
+            raise ValueError(f"Invalid observation at JSONL line {line_number}.") from None
+        yield observation
 
 
 @dataclass(frozen=True)

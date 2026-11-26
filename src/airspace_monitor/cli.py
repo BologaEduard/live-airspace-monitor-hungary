@@ -9,6 +9,7 @@ from pathlib import Path
 
 from airspace_monitor.collector import collect
 from airspace_monitor.config import load_credentials
+from airspace_monitor.features import WindowConfig, export_features
 from airspace_monitor.opensky_client import OpenSkyClient
 from airspace_monitor.preprocess import audit_recording
 from airspace_monitor.storage import SnapshotStore
@@ -47,11 +48,30 @@ def main() -> None:
     segment.add_argument("--observations", type=Path, required=True)
     segment.add_argument("--output-dir", type=Path, default=Path("data/processed"))
     segment.add_argument("--max-gap-seconds", type=positive_float, default=120)
+    features = commands.add_parser("features", help="Compute causal sliding-window kinematics.")
+    features.add_argument("--observations", type=Path, required=True)
+    features.add_argument("--output-dir", type=Path, default=Path("data/processed"))
+    features.add_argument("--window-seconds", type=positive_float, default=300)
+    features.add_argument("--min-duration-seconds", type=positive_float, default=180)
+    features.add_argument("--min-points", type=positive_int, default=8)
+    features.add_argument("--max-sample-gap-seconds", type=positive_float, default=45)
+    features.add_argument("--max-gap-seconds", type=positive_float, default=120)
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
         return
-    if args.command in {"audit", "segment"}:
+    if args.command == "features":
+        try:
+            feature_config = WindowConfig(
+                window_seconds=args.window_seconds,
+                min_duration_seconds=args.min_duration_seconds,
+                min_points=args.min_points,
+                max_sample_gap_seconds=args.max_sample_gap_seconds,
+                max_segment_gap_seconds=args.max_gap_seconds,
+            )
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command in {"audit", "segment", "features"}:
         try:
             if args.command == "audit":
                 report = audit_recording(
@@ -59,12 +79,14 @@ def main() -> None:
                     args.output_dir,
                     max_age_seconds=args.max_age_seconds,
                 )
-            else:
+            elif args.command == "segment":
                 report = segment_observations(
                     args.observations,
                     args.output_dir,
                     max_gap_seconds=args.max_gap_seconds,
                 )
+            else:
+                report = export_features(args.observations, args.output_dir, config=feature_config)
         except (OSError, sqlite3.Error, ValueError):
             parser.exit(
                 1, "Cannot process recording; check the input schema and output directory.\n"

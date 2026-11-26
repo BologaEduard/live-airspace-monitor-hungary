@@ -166,3 +166,58 @@ def test_segment_command_exports_without_authentication(
     main()
     assert json.loads(capsys.readouterr().out)["segment_count"] == 1
     assert (tmp_path / "out/test.trajectories.jsonl").is_file()
+
+
+def test_features_command_exports_without_authentication(
+    monkeypatch, tmp_path, capsys, state_vector
+):
+    observation = (
+        TelemetryAudit()
+        .process(
+            state_vector(),
+            api_time=100,
+            run_id="run1",
+            source_attempt_id=1,
+        )
+        .observation
+    )
+    source = tmp_path / "test.observations.jsonl"
+    source.write_text(json.dumps(asdict(observation)))
+    monkeypatch.setenv("OPENSKY_CLIENT_ID", "partial-environment-must-not-be-used")
+    monkeypatch.delenv("OPENSKY_CLIENT_SECRET", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "airspace-monitor",
+            "features",
+            "--observations",
+            str(source),
+            "--output-dir",
+            str(tmp_path / "out"),
+        ],
+    )
+    main()
+    counts = json.loads(capsys.readouterr().out)["counts"]
+    assert counts["features_written"] == 1 and counts["ml_eligible_windows"] == 0
+    assert (tmp_path / "out/test.features.jsonl").is_file()
+
+
+def test_invalid_feature_window_fails_before_opening_input(monkeypatch, tmp_path):
+    missing = tmp_path / "missing.jsonl"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "airspace-monitor",
+            "features",
+            "--observations",
+            str(missing),
+            "--window-seconds",
+            "100",
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 2
+    assert not missing.exists()

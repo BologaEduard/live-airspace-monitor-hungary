@@ -10,10 +10,10 @@ BME MSc – AI in Practice (2026) Homework Assignment #1.
 ## Current status
 
 Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLite
-recordings, causal telemetry auditing, incremental trajectory segmentation, derived
-JSONL exports, and offline tests.
+recordings, causal telemetry auditing, incremental trajectory segmentation,
+sliding-window kinematic features, derived JSONL exports, and offline tests.
 The existing access-check script is also available.
-Kinematic features, anomaly detection, ML evaluation, and the web application are planned;
+Anomaly detection, ML training/evaluation, and the web application are planned;
 they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
 
 ## Folder structure
@@ -33,8 +33,8 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 ```
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
-`storage`, `recordings`, `exports`, `preprocess`, `trajectories`, and `cli`.
-Planned modules: `features`, `rules`,
+`storage`, `recordings`, `exports`, `preprocess`, `trajectories`, `geo`, `features`, and `cli`.
+Planned modules: `rules`,
 `anomaly_detector`, `benchmark`, `evaluate`, and `app`.
 
 ## Local setup (PowerShell)
@@ -216,6 +216,78 @@ Malformed observation JSONL stops the export with a nonzero exit; existing compl
 trajectory files remain unchanged. Source observations are never overwritten. After a
 long recording finishes, rerun **audit then segment** to include all completed polls.
 
+## Compute kinematic features (offline)
+
+```powershell
+.\.venv\Scripts\python.exe -m airspace_monitor features --observations data/processed/opensky.observations.jsonl
+```
+
+The command consumes audited observations directly, reusing `TrajectoryBuilder` internally
+to obtain the same segment IDs; a separate trajectory export is not required. Outputs:
+
+- `<recording>.features.jsonl`: one causal feature record per accepted observation,
+  including source provenance, window duration, point count, metrics, and quality flags.
+- `<recording>.features.json`: configuration, fixed ML feature order, readiness/quality
+  counts, and the API-time range and maximum attempt ID represented by source observations.
+
+Each aircraft/run has a trailing, position-time window. Defaults are 300 seconds,
+minimum 180 seconds of actual coverage, minimum 8 points, and no adjacent sample interval
+over 45 seconds. CLI options are `--window-seconds`, `--min-duration-seconds`, `--min-points`,
+`--max-sample-gap-seconds`, and `--max-gap-seconds` (segment reset; default 120).
+The left window boundary is inclusive. A new segment clears its history.
+
+| Metric | Definition / units |
+| --- | --- |
+| `velocity_mps`, `vertical_rate_mps`, `baro_altitude_m` | Latest observed values, including nulls |
+| `path_length_m` | Sum of successive spherical ground distances |
+| `net_displacement_m` | Ground distance between first and last window positions |
+| `tortuosity` | Path length / net displacement; null below 1 m net displacement |
+| `straightness` | Net displacement / path length; null for zero path length |
+| `bounding_radius_m` | Maximum distance to the spherical mean of the window positions |
+| `unwrapped_turn_deg` | Sum of shortest signed track changes; clockwise positive |
+| `cumulative_abs_turn_deg` | Sum of absolute track changes; distinct from net turn |
+| `abs_turn_rate_deg_s`, `net_turn_rate_deg_s` | Corresponding total angle / actual window duration |
+| `last_turn_rate_deg_s` | Last adjacent pair's signed change / elapsed time |
+| `descent_gradient_deg` | `atan2(vertical_rate, horizontal_speed)` in degrees; negative for descent |
+| `vertical_acceleration_mps2` | Last adjacent pair's vertical-speed difference / elapsed time |
+| `altitude_change_m`, `altitude_change_rate_mps` | Endpoint barometric-altitude difference and average rate |
+| `last_contact_gap_s`, `position_age_s` | Age relative to the latest source API time, not current wall time |
+
+Distances use a sphere of radius 6,371,008.8 m and ignore altitude; they approximate
+ellipsoidal ground distance. See the [haversine definition](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.haversine_distances.html)
+and [mean-radius convention](https://geopy.readthedocs.io/en/stable/#calculating-distance).
+The gradient is a ground-relative path estimate, not aircraft pitch or proof of ILS
+alignment. Derivatives use position-time intervals as sample-time estimates; individual
+telemetry fields have no independent timestamps in these recordings.
+
+North-crossing track changes are unwrapped (`359 -> 2` is `+3` degrees). Shortest-turn
+unwrapping assumes sampling resolves the turn; an exact 180-degree pair is ambiguous
+and gets a flag instead of an arbitrary direction. Missing track anywhere in the window
+makes whole-window turn totals unavailable; it is never bridged by skipping that point.
+Single-point windows have null turn/acceleration metrics. Zero horizontal speed makes
+the path gradient unavailable. Near-closed loops retain turn and straightness evidence
+while tortuosity remains null; no denominator clamp or artificial infinity is substituted.
+
+`window_ready` means coverage, point count, and sample spacing meet the configured
+requirements. `ml_eligible` additionally requires complete telemetry throughout the window
+and a finite, defined five-feature vector in this fixed order:
+
+```text
+velocity_mps, vertical_rate_mps, abs_turn_rate_deg_s, tortuosity, baro_altitude_m
+```
+
+`ml_vector` is null when ineligible. Individual metrics and quality flags are still
+exported during warmup or partial data. This is an input-availability check, not an
+anomaly score, a physical plausibility guarantee, or a trained model. Airport/runway
+context and distance to coverage boundaries will be added with the detection rules.
+Source poll/contact information is still needed to evaluate disappearance; feature
+records alone must not be interpreted as a live connection heartbeat.
+
+The same `FeatureExtractor.add()` handles incremental live observations and replay
+prefixes without future data. Exports are repeatable and protect existing complete files
+on malformed input. After collection ends, rerun **audit then features** for all available
+points; run `segment` as well if a separate trajectory export is needed.
+
 ## Development checks
 
 ```powershell
@@ -227,7 +299,9 @@ Tests use synthetic responses and temporary SQLite databases. An automatic fixtu
 Requests network access, so missed mocks fail instead of spending live OpenSky credits.
 The suite covers credentials precedence, token reuse/refresh, rate limits, malformed
 responses, backoff, quota exhaustion, interruption, append-only persistence, audit
-exclusions, age boundaries, trajectory gaps, run isolation, and causal replay prefixes.
+exclusions, age boundaries, trajectory gaps, run isolation, causal replay prefixes,
+heading wraparound, signed versus absolute turns, closed loops, missing telemetry,
+window readiness, surface geometry, and numerical overflow.
 See [AGENTS.md](AGENTS.md) for development conventions and
 [the development log](docs/DEVELOPMENT_LOG.md) for AI-assisted work.
 
