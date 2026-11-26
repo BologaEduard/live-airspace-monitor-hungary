@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import sys
+from dataclasses import asdict
 
 import pytest
 from conftest import response
@@ -8,6 +9,7 @@ from conftest import response
 from airspace_monitor.cli import main
 from airspace_monitor.config import BoundingBox
 from airspace_monitor.opensky_client import CollectionAttempt
+from airspace_monitor.preprocess import TelemetryAudit
 from airspace_monitor.storage import SnapshotStore
 
 
@@ -130,3 +132,37 @@ def test_audit_missing_source_exits_nonzero_without_creating_database(monkeypatc
     with pytest.raises(SystemExit) as error:
         main()
     assert error.value.code == 1 and not path.exists()
+
+
+def test_segment_command_exports_without_authentication(
+    monkeypatch, tmp_path, capsys, state_vector
+):
+    observation = (
+        TelemetryAudit()
+        .process(
+            state_vector(),
+            api_time=100,
+            run_id="run1",
+            source_attempt_id=1,
+        )
+        .observation
+    )
+    source = tmp_path / "test.observations.jsonl"
+    source.write_text(json.dumps(asdict(observation)))
+    monkeypatch.setenv("OPENSKY_CLIENT_ID", "partial-environment-must-not-be-used")
+    monkeypatch.delenv("OPENSKY_CLIENT_SECRET", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "airspace-monitor",
+            "segment",
+            "--observations",
+            str(source),
+            "--output-dir",
+            str(tmp_path / "out"),
+        ],
+    )
+    main()
+    assert json.loads(capsys.readouterr().out)["segment_count"] == 1
+    assert (tmp_path / "out/test.trajectories.jsonl").is_file()

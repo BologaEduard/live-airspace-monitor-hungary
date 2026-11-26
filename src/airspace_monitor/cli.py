@@ -12,6 +12,7 @@ from airspace_monitor.config import load_credentials
 from airspace_monitor.opensky_client import OpenSkyClient
 from airspace_monitor.preprocess import audit_recording
 from airspace_monitor.storage import SnapshotStore
+from airspace_monitor.trajectories import segment_observations
 
 
 def positive_float(value: str) -> float:
@@ -42,29 +43,38 @@ def main() -> None:
     audit.add_argument("--db", type=Path, required=True)
     audit.add_argument("--output-dir", type=Path, default=Path("data/processed"))
     audit.add_argument("--max-age-seconds", type=positive_float, default=30)
+    segment = commands.add_parser("segment", help="Build trajectories from audited observations.")
+    segment.add_argument("--observations", type=Path, required=True)
+    segment.add_argument("--output-dir", type=Path, default=Path("data/processed"))
+    segment.add_argument("--max-gap-seconds", type=positive_float, default=120)
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
         return
-    if args.command == "audit":
+    if args.command in {"audit", "segment"}:
         try:
-            report = audit_recording(
-                args.db,
-                args.output_dir,
-                max_age_seconds=args.max_age_seconds,
-            )
+            if args.command == "audit":
+                report = audit_recording(
+                    args.db,
+                    args.output_dir,
+                    max_age_seconds=args.max_age_seconds,
+                )
+            else:
+                report = segment_observations(
+                    args.observations,
+                    args.output_dir,
+                    max_gap_seconds=args.max_gap_seconds,
+                )
         except (OSError, sqlite3.Error, ValueError):
-            parser.exit(1, "Cannot audit recording; check the input schema and output directory.\n")
-        print(
-            json.dumps(
-                {
-                    "polls": report["polls"],
-                    "counts": report["counts"],
-                    "report": report["outputs"]["report"],
-                },
-                indent=2,
+            parser.exit(
+                1, "Cannot process recording; check the input schema and output directory.\n"
             )
-        )
+        summary = {"counts": report["counts"], "report": report["outputs"]["report"]}
+        if "polls" in report:
+            summary["polls"] = report["polls"]
+        if "segment_count" in report:
+            summary["segment_count"] = report["segment_count"]
+        print(json.dumps(summary, indent=2))
         return
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     try:

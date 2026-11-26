@@ -92,3 +92,26 @@ the relevant prompt or request, the resulting change, verification, and any manu
   A live-data audit of the first 20 completed polls found 2,314 raw vectors,
   709 ground exclusions, 1,605 accepted airborne observations, and one incomplete
   analysis input. These are prefix statistics, not final session totals.
+
+## 2026-11-26 — Causal trajectory segments and recording finalization
+
+- Added `TrajectoryBuilder.add()` and the offline `segment` command. Each accepted
+  point gets a deterministic segment ID and index; gaps over 120 seconds and separate
+  collection runs produce separate segments. Duplicate/late observations cannot move
+  state backwards. Missing telemetry is preserved and analysis eligibility is explicit.
+- AI-generated tests cover interleaved aircraft, the exact gap threshold, late and
+  duplicate points, run isolation, incomplete telemetry, stable replay prefixes,
+  repeatable exports, safe failure on malformed JSONL, and credential-free CLI use.
+- Verification: **109 tests passed**, and Ruff passed. Two isolated in-memory mutation
+  probes confirmed that the appropriate tests fail for silent `None`-to-zero coercion
+  and for ignoring long observation gaps. No source files were modified by the probes.
+- End-to-end check on the first 39 live polls: 4,556 raw vectors, 1,423 ground exclusions,
+  one duplicate position, 3,132 accepted points (3,131 complete for analysis), and 114
+  trajectory segments. This prefix is a smoke test, not the final three-hour dataset.
+- Started a hidden local finalizer which waits for the existing collector process to end,
+  then runs audit and segmentation again. Its script, status, and logs are in ignored
+  `data/raw/`; status was verified as `waiting_for_collector`. It makes no API requests.
+  A `processed` status means the available recording was processed, not proof that
+  collection ran for all three hours; final timestamps and poll outcomes must be checked.
+- Collection was still active at this checkpoint. No raw telemetry, derived datasets,
+  credentials, or process metadata were included in the commits.

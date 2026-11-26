@@ -10,9 +10,10 @@ BME MSc – AI in Practice (2026) Homework Assignment #1.
 ## Current status
 
 Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLite
-recordings, causal telemetry auditing, derived JSONL exports, and offline tests.
+recordings, causal telemetry auditing, incremental trajectory segmentation, derived
+JSONL exports, and offline tests.
 The existing access-check script is also available.
-Trajectory segmentation, anomaly detection, ML evaluation, and the web application are planned;
+Kinematic features, anomaly detection, ML evaluation, and the web application are planned;
 they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
 
 ## Folder structure
@@ -32,7 +33,8 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 ```
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
-`storage`, `recordings`, `exports`, `preprocess`, and `cli`. Planned modules: `features`, `rules`,
+`storage`, `recordings`, `exports`, `preprocess`, `trajectories`, and `cli`.
+Planned modules: `features`, `rules`,
 `anomaly_detector`, `benchmark`, `evaluate`, and `app`.
 
 ## Local setup (PowerShell)
@@ -183,6 +185,37 @@ records that ID. Run the audit again after collection ends for the complete sess
 Derived exports are replaced atomically per file on success; this is not a transaction
 across all export files. Use a different directory from the raw database.
 
+## Build trajectory segments (offline)
+
+After auditing the chosen recording:
+
+```powershell
+.\.venv\Scripts\python.exe -m airspace_monitor segment --observations data/processed/opensky.observations.jsonl
+```
+
+Defaults: `--max-gap-seconds 120` and `--output-dir data/processed`. The command creates:
+
+- `<recording>.trajectories.jsonl`: one tagged observation per line, with a deterministic
+  segment ID, segment number, start reason, zero-based point index, and analysis eligibility.
+- `<recording>.segments.json`: point/exclusion counts and each segment's start/end
+  position timestamps, point count, and analysis-eligible point count.
+
+`TrajectoryBuilder.add()` maintains independent state per `(run_id, icao24)`. The first
+point starts a segment; a position-time gap **greater than** 120 seconds starts another.
+A gap of exactly 120 seconds stays in the same segment. Duplicate and older points are
+counted and skipped without moving state backwards. Separate collection runs never join.
+
+Processing is incremental and follows arrival/recording order; it does not sort the entire
+flight using future observations. This same builder can therefore be used in live mode
+and replay. Prefixes produce identical point assignments. No interpolation, flight-phase
+inference, feature engineering, or anomaly detection occurs yet. A segment may contain
+only one point and is not necessarily an entire flight. Missing telemetry remains null,
+and an analysis-eligible point does not imply a complete analysis window.
+
+Malformed observation JSONL stops the export with a nonzero exit; existing complete
+trajectory files remain unchanged. Source observations are never overwritten. After a
+long recording finishes, rerun **audit then segment** to include all completed polls.
+
 ## Development checks
 
 ```powershell
@@ -193,7 +226,8 @@ across all export files. Use a different directory from the raw database.
 Tests use synthetic responses and temporary SQLite databases. An automatic fixture blocks
 Requests network access, so missed mocks fail instead of spending live OpenSky credits.
 The suite covers credentials precedence, token reuse/refresh, rate limits, malformed
-responses, backoff, quota exhaustion, interruption, and append-only persistence.
+responses, backoff, quota exhaustion, interruption, append-only persistence, audit
+exclusions, age boundaries, trajectory gaps, run isolation, and causal replay prefixes.
 See [AGENTS.md](AGENTS.md) for development conventions and
 [the development log](docs/DEVELOPMENT_LOG.md) for AI-assisted work.
 
