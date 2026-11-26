@@ -259,3 +259,17 @@ the relevant prompt or request, the resulting change, verification, and any manu
   At 11:55 UTC the independent collector had 434 successful polls and no recorded failures;
   its existing finalizer was still waiting. Raw/derived data and runtime files stay ignored.
 - No human manual code corrections supplied. No DNS change or public deployment occurred.
+
+## 2026-11-26 — Requested Impeccable doctor diagnostic
+
+- User explicitly requested running Impeccable doctor after its setup notice.
+  Ran `doctor --json` using the existing verified local engine with telemetry disabled.
+- Findings: DESIGN.md exceeds the compact-context threshold; future Persuade/Experience
+  surfaces have no explicit buildPath preference; the automatic design hook is absent.
+  The rule registry was available. No automatic-repair findings were reported.
+- Ran the read-only `design-compact` proposal as required by doctor: 8,906 bytes would
+  become 3,284, saving 5,622 bytes (approximately 1,405 tokens). Did not apply it:
+  the maintenance playbook explicitly requires agreement before `--write`.
+- Doctor routes hook installation to `impeccable update` and build-path selection to
+  an explicit preference. Neither was silently applied by this diagnostic.
+  Application code, design, collector and local server were not changed.
