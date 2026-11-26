@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T11:55:45.045185+00:00",
+  "title": "Design System: Airspace",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.015 230)",
+          "oklch(27% 0.03 230)",
+          "oklch(39% 0.05 230)",
+          "oklch(51% 0.065 230)",
+          "oklch(63% 0.07 230)",
+          "oklch(75% 0.055 230)",
+          "oklch(87% 0.03 230)",
+          "oklch(95% 0.01 230)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.015 230)",
+          "oklch(27% 0.03 230)",
+          "oklch(39% 0.05 230)",
+          "oklch(51% 0.065 230)",
+          "oklch(63% 0.07 230)",
+          "oklch(75% 0.055 230)",
+          "oklch(87% 0.03 230)",
+          "oklch(95% 0.01 230)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.015 240)",
+          "oklch(27% 0.03 240)",
+          "oklch(39% 0.05 240)",
+          "oklch(51% 0.065 240)",
+          "oklch(63% 0.07 240)",
+          "oklch(75% 0.055 240)",
+          "oklch(87% 0.03 240)",
+          "oklch(95% 0.01 240)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.015 235)",
+          "oklch(27% 0.03 235)",
+          "oklch(39% 0.05 235)",
+          "oklch(51% 0.065 235)",
+          "oklch(63% 0.07 235)",
+          "oklch(75% 0.055 235)",
+          "oklch(87% 0.03 235)",
+          "oklch(95% 0.01 235)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.015 230)",
+          "oklch(27% 0.03 230)",
+          "oklch(39% 0.05 230)",
+          "oklch(51% 0.065 230)",
+          "oklch(63% 0.07 230)",
+          "oklch(75% 0.055 230)",
+          "oklch(87% 0.03 230)",
+          "oklch(95% 0.01 230)"
+        ]
+      },
+      "chart": {
+        "role": "primary",
+        "displayName": "Chart",
+        "tonalRamp": [
+          "oklch(15% 0.015 240)",
+          "oklch(27% 0.03 240)",
+          "oklch(39% 0.05 240)",
+          "oklch(51% 0.065 240)",
+          "oklch(63% 0.07 240)",
+          "oklch(75% 0.055 240)",
+          "oklch(87% 0.03 240)",
+          "oklch(95% 0.01 240)"
+        ]
+      },
+      "amber": {
+        "role": "primary",
+        "displayName": "Amber",
+        "tonalRamp": [
+          "oklch(15% 0.015 80)",
+          "oklch(27% 0.03 80)",
+          "oklch(39% 0.05 80)",
+          "oklch(51% 0.065 80)",
+          "oklch(63% 0.07 80)",
+          "oklch(75% 0.055 80)",
+          "oklch(87% 0.03 80)",
+          "oklch(95% 0.01 80)"
+        ]
+      },
+      "coral": {
+        "role": "secondary",
+        "displayName": "Coral",
+        "tonalRamp": [
+          "oklch(15% 0.015 45)",
+          "oklch(27% 0.03 45)",
+          "oklch(39% 0.05 45)",
+          "oklch(51% 0.065 45)",
+          "oklch(63% 0.07 45)",
+          "oklch(75% 0.055 45)",
+          "oklch(87% 0.03 45)",
+          "oklch(95% 0.01 45)"
+        ]
+      },
+      "flight-high": {
+        "role": "secondary",
+        "displayName": "Flight High",
+        "tonalRamp": [
+          "oklch(15% 0.015 220)",
+          "oklch(27% 0.03 220)",
+          "oklch(39% 0.05 220)",
+          "oklch(51% 0.065 220)",
+          "oklch(63% 0.07 220)",
+          "oklch(75% 0.055 220)",
+          "oklch(87% 0.03 220)",
+          "oklch(95% 0.01 220)"
+        ]
+      },
+      "flight-low": {
+        "role": "secondary",
+        "displayName": "Flight Low",
+        "tonalRamp": [
+          "oklch(15% 0.015 220)",
+          "oklch(27% 0.03 220)",
+          "oklch(39% 0.05 220)",
+          "oklch(51% 0.065 220)",
+          "oklch(63% 0.07 220)",
+          "oklch(75% 0.055 220)",
+          "oklch(87% 0.03 220)",
+          "oklch(95% 0.01 220)"
+        ]
+      },
+      "flight-unknown": {
+        "role": "neutral",
+        "displayName": "Flight Unknown",
+        "tonalRamp": [
+          "oklch(15% 0.015 240)",
+          "oklch(27% 0.03 240)",
+          "oklch(39% 0.05 240)",
+          "oklch(51% 0.065 240)",
+          "oklch(63% 0.07 240)",
+          "oklch(75% 0.055 240)",
+          "oklch(87% 0.03 240)",
+          "oklch(95% 0.01 240)"
+        ]
+      },
+      "trail": {
+        "role": "secondary",
+        "displayName": "Trail",
+        "tonalRamp": [
+          "oklch(15% 0.015 225)",
+          "oklch(27% 0.03 225)",
+          "oklch(39% 0.05 225)",
+          "oklch(51% 0.065 225)",
+          "oklch(63% 0.07 225)",
+          "oklch(75% 0.055 225)",
+          "oklch(87% 0.03 225)",
+          "oklch(95% 0.01 225)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15% 0.015 230)",
+          "oklch(27% 0.03 230)",
+          "oklch(39% 0.05 230)",
+          "oklch(51% 0.065 230)",
+          "oklch(63% 0.07 230)",
+          "oklch(75% 0.055 230)",
+          "oklch(87% 0.03 230)",
+          "oklch(95% 0.01 230)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page heading."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Selected aircraft identity."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Evidence prose."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Compact controls."
+      },
+      "measurement": {
+        "displayName": "Measurement",
+        "purpose": "Telemetry values."
+      }
+    },
+    "shadows": [
+      {
+        "name": "map-controls",
+        "value": "0 3px 10px #05121c2b",
+        "purpose": "Floating map controls."
+      },
+      {
+        "name": "data-disclosure",
+        "value": "0 8px 32px #122d4121",
+        "purpose": "About-data popover."
+      },
+      {
+        "name": "aircraft-drop-shadow",
+        "value": "0 2px 2px #071724a0",
+        "purpose": "SVG filter drop-shadow."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Arrival and evidence chevron easing."
+      },
+      {
+        "name": "arrive",
+        "value": "450ms",
+        "purpose": "Fade from .85 and translateY(4px) to rest."
+      },
+      {
+        "name": "disclosure",
+        "value": "180ms",
+        "purpose": "Evidence chevron transform."
+      },
+      {
+        "name": "map-fit",
+        "value": "650ms",
+        "purpose": "Map fit, zero under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1600px"
+      },
+      {
+        "name": "narrow-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "stacked",
+        "value": "780px"
+      },
+      {
+        "name": "compact",
+        "value": "500px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Play button",
+      "kind": "button",
+      "refersTo": "button-play",
+      "description": "Filled recording playback action.",
+      "html": "<button class=\"ds-play\" aria-label=\"Play recording\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><path d=\"m9 5 11 7-11 7Z\"/></svg></button>",
+      "css": ".ds-play{font-family:'Manrope Variable',sans-serif;border:0;background:var(--ink,#182d40);color:white;width:38px;height:38px;border-radius:8px;display:grid;place-items:center;cursor:pointer}.ds-play:hover:not(:disabled){background:#2f536b}.ds-play:disabled{opacity:.45}.ds-play:focus-visible{outline:3px solid var(--focus,#367a99);outline-offset:4px}"
+    },
+    {
+      "name": "Quiet button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Low-emphasis toolbar action.",
+      "html": "<button class=\"ds-quiet\">Fit Hungary</button>",
+      "css": ".ds-quiet{font-family:'Manrope Variable',sans-serif;border:0;background:transparent;color:var(--ink,#182d40);padding:9px 7px;border-radius:5px;font-size:13px;font-weight:650;cursor:pointer}.ds-quiet:hover{background:#edf3f5}.ds-quiet:focus-visible{outline:3px solid var(--focus,#367a99);outline-offset:4px}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Borderless toolbar search.",
+      "html": "<input class=\"ds-search\" type=\"search\" placeholder=\"Find a callsign or ICAO24\" aria-label=\"Find a callsign or ICAO24\"/>",
+      "css": ".ds-search{font-family:'Manrope Variable',sans-serif;background:transparent;border:0;color:var(--ink,#182d40);height:38px;font-size:14px;border-radius:4px;caret-color:#26718b}.ds-search::placeholder{color:#657987}.ds-search:focus-visible{outline:3px solid var(--focus,#367a99);outline-offset:4px}"
+    },
+    {
+      "name": "Aircraft select",
+      "kind": "input",
+      "refersTo": "select-aircraft",
+      "description": "Native recorded-aircraft selector.",
+      "html": "<select class=\"ds-select\" aria-label=\"Select aircraft\"><option>Select aircraft</option><option>Recorded aircraft</option></select>",
+      "css": ".ds-select{font-family:'Manrope Variable',sans-serif;color:var(--ink,#182d40);border:1px solid var(--border,#dce4e8);border-radius:6px;background:#fafcfc;padding:10px 28px 10px 11px;font-size:14px;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m2 2 4 4 4-4' fill='none' stroke='%23566d7d' stroke-width='1.5'/%3E%3C/svg%3E\");background-position:right 9px center;background-repeat:no-repeat}.ds-select:focus-visible{outline:3px solid var(--focus,#367a99);outline-offset:4px}"
+    },
+    {
+      "name": "Text navigation",
+      "kind": "nav",
+      "description": "Current section indicated by a bottom rule.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a href=\"#workspace\" aria-current=\"page\">Workspace</a><a href=\"#evidence\">Evidence</a></nav>",
+      "css": ".ds-nav{font-family:'Manrope Variable',sans-serif;display:flex;gap:32px;height:58px;font-size:14px;font-weight:700}.ds-nav a{display:flex;align-items:center;position:relative;text-decoration:none;color:var(--muted,#526879)}.ds-nav a[aria-current]{color:var(--ink,#182d40)}.ds-nav a[aria-current]::after{content:\"\";position:absolute;bottom:0;left:0;right:0;height:3px;background:#365f74}.ds-nav a:hover{color:#1e5976}.ds-nav a:focus-visible{outline:3px solid var(--focus,#367a99);outline-offset:4px}"
+    },
+    {
+      "name": "Local preview tag",
+      "kind": "chip",
+      "refersTo": "tag-local",
+      "description": "Noninteractive environment label.",
+      "html": "<span class=\"ds-tag\">Local preview</span>",
+      "css": ".ds-tag{font-family:'Manrope Variable',sans-serif;display:inline-block;border:1px solid var(--border,#dce4e8);border-radius:6px;padding:7px 11px;font-size:13px;color:var(--muted,#526879)}"
+    },
+    {
+      "name": "Quality panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Panel containing explicit data-quality context.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-quality\">Values come from the selected recorded frame.</div></section>",
+      "css": ".ds-panel{font-family:'Manrope Variable',sans-serif;background:var(--surface,#fff);border:1px solid var(--border,#dce4e8);border-radius:var(--radius,14px);padding:25px 24px 20px}.ds-quality{padding:13px 12px;background:#edf3f5;border-radius:7px;color:#4d6c7d;font-size:13px;line-height:1.7}"
+    },
+    {
+      "name": "Selected aircraft",
+      "kind": "custom",
+      "refersTo": "marker-selected",
+      "description": "Amber selection retains missing-altitude ring when applicable.",
+      "html": "<div class=\"ds-chart\"><button class=\"ds-plane\" aria-label=\"Selected aircraft\" aria-pressed=\"true\"><svg viewBox=\"0 0 32 32\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M14.4 3.6c.2-1 1-1.6 1.6-1.6s1.4.6 1.6 1.6l1.1 9.4 10.1 6.2v2.5l-10.1-3.2-.5 7 3.4 2.5v1.8l-5.6-1.6-5.6 1.6V28l3.4-2.5-.5-7-10.1 3.2v-2.5L13.3 13Z\"/></svg></button></div>",
+      "css": ".ds-chart{background:var(--chart,#152b3b);padding:24px}.ds-plane{display:grid;place-items:center;width:32px;height:32px;padding:5px;border:0;border-radius:50%;color:var(--amber,#e5b664);background:#e5b66416;outline:1px solid #e5b66490;outline-offset:3px;cursor:pointer}.ds-plane svg{width:22px;height:22px;filter:drop-shadow(0 2px 2px #071724a0)}.ds-plane:hover{color:#fff;background:#7594aa26}.ds-plane:focus-visible{outline:3px solid var(--amber,#e5b664)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Night atlas",
+    "overview": "Night atlas pairs cool paper surfaces with deep chart fields. Manrope provides a single, precise typographic voice; warm selection and restrained evidence color make state changes legible.\n\nThe material is flat and lightly bounded. Depth comes primarily from tonal separation, with small shadows reserved for floating controls and disclosures.",
+    "keyCharacteristics": [
+      "Cool paper and deep blue tonal separation.",
+      "Amber selection and ice-blue observations.",
+      "Compact controls with explicit focus and data-quality states."
+    ],
+    "rules": [
+      {
+        "name": "The State Evidence Rule",
+        "body": "Pair state color with text, shape, or selection semantics; missing altitude retains its dashed ring even under selection.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep selection amber and evidence indicators coral.",
+      "Do retain tabular numerals for measurements and timestamps.",
+      "Do retain visible focus, reduced-motion support, and explicit unavailable states."
+    ],
+    "donts": [
+      "Don't represent missing telemetry as zero or a normal status.",
+      "Don't remove the dashed missing-altitude ring when an aircraft is selected.",
+      "Don't use aircraft rotation to imply a known track when track is unavailable."
+    ]
+  }
+}

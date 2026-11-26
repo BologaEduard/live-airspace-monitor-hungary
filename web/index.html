@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#152b3b" />
+    <meta name="description" content="A local, evidence-led view of recorded Hungarian airspace." />
+    <title>Airspace / Hungary</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to airspace</a>
+    <header class="app-header">
+      <a class="brand" href="/" aria-label="Airspace Hungary home">
+        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M6 27C13 27 14 13 21 13h13M6 20c9 0 10-14 19-14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="m25 24 8 5-10 4 2-9Z" fill="currentColor"/></svg>
+        <span>Airspace<span class="brand-country">/ Hungary</span></span>
+      </a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="#workspace" aria-current="page">Workspace</a><a href="#evidence">Evidence</a></nav>
+      <div class="header-end"><time id="wall-clock" class="wall-clock">UTC</time><span class="local-tag">Local preview</span></div>
+    </header>
+
+    <main class="app-shell">
+      <section class="page-intro" aria-labelledby="page-title">
+        <div><h1 id="page-title">Hungarian airspace</h1><p>Follow the movement. Inspect the evidence.</p></div>
+        <div class="source-summary"><span class="source-badge" id="source-badge"><span></span>Loading recording</span><p id="source-caption">Reading your local airspace recording.</p></div>
+      </section>
+
+      <div class="notice" id="notice" role="status" hidden></div>
+      <section id="workspace" class="workspace" aria-label="Airspace workspace">
+        <div class="map-workspace">
+          <div class="map-toolbar">
+            <label class="search-field"><span class="icon" id="search-icon" aria-hidden="true"></span><input id="flight-search" type="search" placeholder="Find a callsign or ICAO24" aria-label="Find a callsign or ICAO24" autocomplete="off" /><kbd>/</kbd></label>
+            <span class="visible-count" id="visible-count">Loading positions</span>
+            <button class="quiet-button fit-button" id="fit-region" type="button" aria-label="Fit Hungary"><span class="icon" data-icon="expand" aria-hidden="true"></span><span>Fit Hungary</span></button>
+          </div>
+          <div class="map-viewport" id="map-viewport">
+            <div id="airspace-map" role="region" aria-label="Map of recorded aircraft over Hungary"></div>
+            <div class="map-heading"><span class="map-location">Hungary &amp; border region</span><span class="map-time" id="map-time">Recorded positions</span></div>
+            <div class="map-legend" aria-label="Altitude legend"><span><i class="legend-high"></i>9,000 m and above</span><span><i class="legend-low"></i>Below 9,000 m</span><span><i class="legend-unknown"></i>Altitude unavailable</span><span><i class="legend-selected"></i>Selected</span></div>
+            <div class="map-empty" id="map-empty" hidden><strong>No positions to display</strong><span>Try another frame or clear the search.</span></div>
+            <div class="map-error" id="map-error" role="alert" hidden><strong>The map could not start.</strong><span>Enable WebGL in your browser. Flight details remain available.</span></div>
+            <div class="map-caption"><span class="caption-line"></span><span id="trail-caption">Select an aircraft to inspect its recorded trail.</span></div>
+          </div>
+          <div class="playback">
+            <div class="playback-top"><span class="playback-title">Recording timeline</span><button class="follow-button is-active" id="follow-latest" type="button" aria-pressed="true"><span class="icon" data-icon="record" aria-hidden="true"></span>Latest frame</button></div>
+            <div class="timeline-controls">
+              <button class="play-button" id="play-toggle" type="button" aria-label="Play recording" disabled><span class="icon" data-icon="play" aria-hidden="true"></span></button>
+              <time class="selected-time" id="selected-time">--:--:-- <small>UTC</small></time>
+              <div class="timeline-track"><input type="range" id="timeline" min="0" max="0" value="0" aria-label="Recording timeline" disabled /><div class="timeline-labels"><time id="timeline-start">--:--</time><span id="timeline-window">Recent recorded frames</span><time id="timeline-end">--:--</time></div></div>
+              <label class="speed-control"><span class="sr-only">Playback speed</span><select id="playback-speed" aria-label="Playback speed"><option value="1">1×</option><option value="5" selected>5×</option><option value="20">20×</option></select></label>
+            </div>
+          </div>
+        </div>
+
+        <aside class="inspector" aria-label="Flight inspector">
+          <div class="inspector-tabs" role="tablist" aria-label="Inspector view"><button id="flight-tab" type="button" role="tab" aria-selected="true" aria-controls="flight-panel">Aircraft</button><button id="evidence-tab" type="button" role="tab" aria-selected="false" aria-controls="evidence-panel">Evidence<span class="tab-count" id="candidate-count">—</span></button></div>
+          <section id="flight-panel" class="inspector-panel" role="tabpanel" aria-labelledby="flight-tab">
+            <div class="flight-heading"><span class="selected-plane-icon" id="selected-plane-icon" aria-hidden="true"></span><div><h2 id="selected-callsign">Select an aircraft</h2><p id="selected-identity">Choose a marker on the map.</p></div></div>
+            <label class="aircraft-picker"><span class="sr-only">Select aircraft</span><select id="aircraft-select" aria-label="Select aircraft"><option value="">Waiting for positions</option></select></label>
+            <div class="measurements" id="measurements"><div><span>Barometric altitude</span><strong id="selected-altitude">Unavailable</strong></div><div><span>Ground speed</span><strong id="selected-speed">Unavailable</strong></div><div><span>Vertical rate</span><strong id="selected-vertical">Unavailable</strong></div><div><span>True track</span><strong id="selected-track">Unavailable</strong></div></div>
+            <dl class="flight-facts"><div><dt>Registration country</dt><dd id="selected-country">Unavailable</dd></div><div><dt>Geometric altitude</dt><dd id="selected-geo-altitude">Unavailable</dd></div><div><dt>Squawk</dt><dd id="selected-squawk">Unavailable</dd></div><div><dt>Position received</dt><dd id="selected-position-time">Unavailable</dd></div></dl>
+            <div class="quality-note" id="quality-note"><span class="icon" data-icon="info" aria-hidden="true"></span><p>Values come from the selected recorded frame.</p></div>
+            <div class="inspector-footer"><span class="tiny-plane" data-icon="route" aria-hidden="true"></span><p>A trail is a record of observed positions, not a predicted route.</p></div>
+          </section>
+          <section id="evidence-panel" class="inspector-panel" role="tabpanel" aria-labelledby="evidence-tab" hidden><h2 id="evidence">Recorded candidates</h2><p class="evidence-intro">Rule-based observations with physical evidence. These are not verified incidents.</p><p class="analysis-caption" id="analysis-caption">Checking available analysis.</p><div id="evidence-list"></div></section>
+        </aside>
+      </section>
+      <footer class="page-footer"><span>OpenSky Network data <span class="footer-divider">/</span> UTC throughout</span><details class="about-data"><summary>About this preview</summary><div><strong>A local view of recorded airspace.</strong><p>The map reads your existing recording without making OpenSky requests. Replay covers the most recent saved frames. Candidate history may come from an earlier analysis. The ML benchmark and trained model are still to come.</p><p>Cartography: Natural Earth, public domain. No external map tiles are requested.</p></div></details><span>BME <span class="footer-divider">/</span> AI in Practice</span></footer>
+      <div id="announcer" class="sr-only" aria-live="polite"></div>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

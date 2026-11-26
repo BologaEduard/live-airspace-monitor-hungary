@@ -222,3 +222,40 @@ the relevant prompt or request, the resulting change, verification, and any manu
   adapter; it does not fail these checks. No human manual code corrections supplied.
 - Existing raw recording and waiting finalizer were left running. No credentials read,
   DNS changes, public deployment, synthetic benchmark or model training performed.
+
+## 2026-11-26 — Night atlas local web foundation
+
+- User requested downloading and applying Impeccable and Anthropic Frontend Design.
+  Installed both from their upstream GitHub repositories using skill-installer. Also
+  followed the Sites local-repository workflow without registering or publishing a Site.
+  The Impeccable engine v0.1.31 was downloaded only after checking its shipped SHA-256
+  manifest, and run from an ignored local directory with telemetry disabled.
+- User confirmed **English** and **Night atlas** in native chat questions. A local
+  graphical direction chooser was served too; the decision was a chat answer, not a
+  claimed chooser click. Recorded product context, a direction contract and design tokens.
+- Added a Vite/vanilla-JavaScript interface with self-hosted Manrope, locally bundled
+  Natural Earth geography, MapLibre, search, aircraft selection, recent-frame replay,
+  1×/5×/20× controls, and historical evidence details. Asset provenance is in web/ASSETS.md.
+  No fabricated flights, raster mockups, ML scores, or verified-incident claims ship.
+- Corrections during implementation: MapLibre 6 uses named exports and requires its
+  worker to be explicitly bundled for Vite; aircraft markers must retain MapLibre's
+  positioning class. Browser tests guard worker console errors as well as selection.
+  A mobile icon-only Fit Hungary button also needed an explicit accessible name.
+- Impeccable first-viewport capture verified the map and playback action at 1440×900
+  and 390×844. A fresh independent finish reviewer requested three material changes:
+  explicit missing-altitude encoding, protected mobile annotations, and quieter compact
+  background traffic. Applied them together; the same reviewer scored all three resolved
+  with disposition **ship**. This verdict covers those fixes, not production readiness.
+- Ran the mechanical detector once. Its only finding claimed flat heading hierarchy
+  from index.html; external CSS and the actual captures demonstrate distinct heading
+  sizes, so the reviewer classified it as a false positive. Did not rerun the detector.
+- Verification: production build succeeded; **9 offline Playwright browser tests passed**
+  in isolated Chromium/Edge. Covered worker errors, selection, null/zero measurements,
+  causal evidence visibility, playback, search recovery, keyboard tabs, unavailable data,
+  HTTP failure, and overflow at 320/390/768/1440px. Physical mobile/Safari not tested.
+  Build reports the map library's >500kB chunk advisory; bundle splitting is deferred.
+- README now distinguishes the local foundation from planned full-session replay,
+  benchmark, trained ML and deployment. The running app is loopback-only on port 8000.
+  At 11:55 UTC the independent collector had 434 successful polls and no recorded failures;
+  its existing finalizer was still waiting. Raw/derived data and runtime files stay ignored.
+- No human manual code corrections supplied. No DNS change or public deployment occurred.

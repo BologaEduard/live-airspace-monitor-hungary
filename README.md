@@ -12,17 +12,19 @@ BME MSc – AI in Practice (2026) Homework Assignment #1.
 Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLite
 recordings, causal telemetry auditing, incremental trajectory segmentation,
 sliding-window kinematic features, rule-based recording analysis, evidence-backed
-alert lifecycles, derived JSONL exports, and offline tests.
+alert lifecycles, derived JSONL exports, an initial local map/replay interface,
+and offline tests.
 The existing access-check script is also available.
-ML training/evaluation and the web application are planned;
-they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
+ML training/evaluation, full-session replay, and a public deployment are planned.
+The current website is a local foundation, not the complete specified application.
+See [SPEC.md](SPEC.md) for the specification.
 
 ## Folder structure
 
 ```text
 src/airspace_monitor/   Python application package and CLI
 tests/                 Automated tests and small synthetic fixtures
-web/                   Future map, replay controls, and alert inspector
+web/                   Local map, recent replay controls, and evidence inspector
 data/raw/              Local original recordings (ignored by Git)
 data/processed/        Local cleaned trajectories and features (ignored by Git)
 data/demo/             Deliberately selected replay datasets (currently empty)
@@ -35,9 +37,9 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
 `storage`, `recordings`, `exports`, `preprocess`, `trajectories`, `geo`, `features`,
-`airspace`, `rules`, `alerts`, `continuity`, `detector`, and `cli`.
+`airspace`, `rules`, `alerts`, `continuity`, `detector`, `preview`, `app`, and `cli`.
 Planned modules:
-`anomaly_detector`, `benchmark`, `evaluate`, and `app`.
+`anomaly_detector`, `benchmark`, and `evaluate`.
 
 ## Local setup (PowerShell)
 
@@ -52,6 +54,60 @@ python -m venv .venv
 
 With no subcommand, the entry point displays help and makes no network requests.
 An installed console entry point, `airspace-monitor`, is also available inside the environment.
+
+## Local website preview
+
+The English **Night atlas** interface reads existing SQLite recordings. It includes
+an offline regional map, aircraft search and selection, telemetry, recent-frame
+playback at 1×/5×/20×, and available historical rule candidates with evidence.
+It makes no OpenSky requests and can run alongside the independent collector.
+
+Requires Node.js 22.12+ (or a compatible Vite-supported version) and Python 3.11+.
+Run from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,web]"
+npm.cmd --prefix web ci
+npm.cmd --prefix web run build
+.\.venv\Scripts\python.exe -m airspace_monitor serve
+```
+
+Open **http://127.0.0.1:8000/**. The server binds only to loopback. `--port 8001`
+selects another local port. Ctrl+C stops the server; it does not stop collection.
+Without `--db`, the newest `data/raw/*.sqlite3` file is chosen at startup. To pin it:
+
+```powershell
+.\.venv\Scripts\python.exe -m airspace_monitor serve --db data/raw/my-recording.sqlite3
+```
+
+No recording produces an explicit empty state. The initial API returns at most
+48 recent successful polls from the newest successful run, about 12 minutes at
+15-second intervals. Scrubbing freezes this window; **Latest frame** resumes
+15-second refreshes. Trails and candidate visibility never use frames later than
+the selected recording time. Full-session replay and live inference are future work.
+
+The API keeps UTC timestamps and SI telemetry; the browser displays ground speed
+in km/h. Missing telemetry is **Unavailable**, stale positions are flagged, and source
+interruption is separate from an individual contact gap. A recent recording can keep
+updating, but the UI never claims that saved observations are verified live traffic.
+
+Historical candidate evidence is loaded from matching `data/processed/<stem>.detection.json`
+and `<stem>.alerts.jsonl` exports when available; run the existing `detect` command to
+produce them. These are heuristic screening candidates, not verified incidents or
+ML results. Their analysis timestamp can precede the most recent recording frame.
+
+Only `web/dist/` is served publicly to the local browser. Credentials, raw databases,
+and the repository root are not static mounts. Fonts and selected Natural Earth
+geography are bundled locally; see [asset provenance](web/ASSETS.md).
+No DNS or deployment is configured. Design context is in [PRODUCT.md](PRODUCT.md),
+[DESIGN.md](DESIGN.md), and [.impeccable/surfaces/web.md](.impeccable/surfaces/web.md).
+
+For frontend development, leave the Python server running and use
+`npm.cmd --prefix web run dev`; Vite proxies `/api` to port 8000.
+After a build, run `npm.cmd --prefix web run test:ui` against the running local server
+for synthetic, offline browser checks. Microsoft Edge is the default test browser;
+set `PLAYWRIGHT_CHANNEL=chrome` for an installed Chrome, or configure your Playwright
+browser. These tests mock telemetry and do not spend API credits.
 
 ## Collect airspace data
 

@@ -33,3 +33,11 @@ artifacts/evaluation/*
 *.sqlite3-shm
 .env.*
 !.env.example
+
+# Web dependencies, build output, and browser verification
+node_modules/
+test-results/
+playwright-report/
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/review/
