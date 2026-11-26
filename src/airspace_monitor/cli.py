@@ -9,6 +9,7 @@ from pathlib import Path
 
 from airspace_monitor.collector import collect
 from airspace_monitor.config import load_credentials
+from airspace_monitor.detector import detect_recording
 from airspace_monitor.features import WindowConfig, export_features
 from airspace_monitor.opensky_client import OpenSkyClient
 from airspace_monitor.preprocess import audit_recording
@@ -56,6 +57,9 @@ def main() -> None:
     features.add_argument("--min-points", type=positive_int, default=8)
     features.add_argument("--max-sample-gap-seconds", type=positive_float, default=45)
     features.add_argument("--max-gap-seconds", type=positive_float, default=120)
+    detector = commands.add_parser("detect", help="Run rule-based screening on recorded polls.")
+    detector.add_argument("--db", type=Path, required=True)
+    detector.add_argument("--output-dir", type=Path, default=Path("data/processed"))
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
@@ -71,7 +75,7 @@ def main() -> None:
             )
         except ValueError as error:
             parser.error(str(error))
-    if args.command in {"audit", "segment", "features"}:
+    if args.command in {"audit", "segment", "features", "detect"}:
         try:
             if args.command == "audit":
                 report = audit_recording(
@@ -85,8 +89,10 @@ def main() -> None:
                     args.output_dir,
                     max_gap_seconds=args.max_gap_seconds,
                 )
-            else:
+            elif args.command == "features":
                 report = export_features(args.observations, args.output_dir, config=feature_config)
+            else:
+                report = detect_recording(args.db, args.output_dir)
         except (OSError, sqlite3.Error, ValueError):
             parser.exit(
                 1, "Cannot process recording; check the input schema and output directory.\n"
@@ -96,6 +102,11 @@ def main() -> None:
             summary["polls"] = report["polls"]
         if "segment_count" in report:
             summary["segment_count"] = report["segment_count"]
+        if "alert_event_counts" in report:
+            summary["alert_event_counts"] = report["alert_event_counts"]
+            summary["opened_alert_counts_by_type"] = report["opened_alert_counts_by_type"]
+            summary["source_reason_counts"] = report["source_reason_counts"]
+            summary["active_alert_count"] = report["active_alert_count"]
         print(json.dumps(summary, indent=2))
         return
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

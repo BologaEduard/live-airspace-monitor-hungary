@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from airspace_monitor.config import Credentials
+from airspace_monitor.config import BoundingBox, Credentials
 from airspace_monitor.opensky_client import OpenSkyClient
 
 
@@ -123,5 +123,25 @@ def state_vector():
         for name, value in fields.items():
             row[indices[name]] = value
         return row
+
+    return make
+
+
+@pytest.fixture
+def poll():
+    def make(at, states, *, run="run1", outcome="success", received_age=0, raw=None, bbox=None):
+        completed = datetime.fromtimestamp(at + received_age, timezone.utc).isoformat()
+        return {
+            "id": at + 1,
+            "run_id": run,
+            "bbox_json": json.dumps((bbox or BoundingBox()).as_params()),
+            "requested_at": completed,
+            "completed_at": completed,
+            "phase": "states",
+            "outcome": outcome,
+            "http_status": 200 if outcome == "success" else None,
+            "api_time": at if outcome == "success" else None,
+            "raw_body": raw if raw is not None else json.dumps({"time": at, "states": states}),
+        }
 
     return make

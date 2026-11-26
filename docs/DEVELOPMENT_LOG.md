@@ -166,3 +166,39 @@ the relevant prompt or request, the resulting change, verification, and any manu
   near an airport, confirmation gaps, code typing, and lifecycle deduplication.
 - The approach fixture uses coherent moving positions and an altitude profile; it is
   an analytical unit fixture, not a verified LHBP runway procedure or benchmark label.
+
+## 2026-11-26 — Source-aware continuity and recording detector
+
+- Added conservative raw-contact continuity state, source-health/reset guards, a shared
+  causal `RuleEngine.process_poll()`, and the credential-free offline `detect` command.
+  Exports include alert lifecycle events, source-quality events, and a full configuration
+  and diagnostic report. The collector remains a recorder; no web/live inference loop added.
+- Source failures, empty/all-stale traffic, capture/API clock problems, changed scope,
+  large poll gaps, and mass disappearances cannot be turned into individual loss claims.
+  Fresh contacts update continuity even when cleaned positions are unavailable. Ground,
+  altitude, configured airport proximity, projected boundary exit, and context age are
+  explicit guards. Expiry/uncertainty does not assert a recovered or normal aircraft.
+- Review corrections: reject future API time relative to event time, detect regressing
+  capture clocks, require all four stored bounding-box coordinates instead of silently
+  using defaults, reset descent confirmation on ground observations, and guard extreme
+  projections. Readable descent evidence now includes ground angle/abrupt acceleration.
+- Verification: **213 offline tests passed**, Ruff passed, CLI help and a real recording
+  prefix completed successfully. Tests include source outages and recovery, landing versus
+  high overflight, predicted exits, stale/missing/duplicate positions with fresh contacts,
+  unsynchronised clocks, run/scope isolation, context expiry, JSON/SQLite reproducibility,
+  source preservation, and causal replay prefixes.
+- In-memory mutation probes confirmed tests fail when loss baselines survive a source
+  outage or when projected boundary exits are ignored. Probes did not modify source files.
+- Smoke test on the first 180 polls: 179 advancing usable snapshots, one cached/nonadvancing
+  diagnostic, seven opened candidates (six descent, one contact gap), twelve updates, seven
+  closes, and zero active candidates at that prefix's end. These are unlabelled heuristic
+  outputs, not verified real anomalies or precision/recall estimates. Thresholds were not
+  tuned against this prefix. Later live checks showed 187 and 193 successful collector polls.
+- Final CLI verification on the 213-poll prefix reported eight opened candidates (seven
+  descent and one contact gap), sixteen updates, eight closes, and one nonadvancing
+  source diagnostic. These updated counts have the same unlabelled screening status.
+- Extended the identity-checked, waiting local finalizer to run `detect` after audit,
+  segmentation, and feature export. The original collector process was left running.
+- No human manual code corrections supplied. No ML training, quantitative benchmark,
+  application deployment, or DNS modification occurred. All recording/derived data and
+  process metadata remain local and ignored by Git.

@@ -221,3 +221,41 @@ def test_invalid_feature_window_fails_before_opening_input(monkeypatch, tmp_path
         main()
     assert error.value.code == 2
     assert not missing.exists()
+
+
+def test_detect_command_needs_no_credentials(monkeypatch, tmp_path, capsys, state_vector, poll):
+    source = tmp_path / "raw/test.sqlite3"
+    item = poll(100, [state_vector(squawk="7700")])
+    with SnapshotStore(source) as store:
+        store.save(
+            CollectionAttempt(
+                requested_at=item["requested_at"],
+                completed_at=item["completed_at"],
+                phase="states",
+                outcome="success",
+                http_status=200,
+                api_time=item["api_time"],
+                raw_body=item["raw_body"],
+            ),
+            run_id="run1",
+            bbox=BoundingBox(),
+        )
+    monkeypatch.setenv("OPENSKY_CLIENT_ID", "partial-environment-must-not-be-used")
+    monkeypatch.delenv("OPENSKY_CLIENT_SECRET", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "airspace-monitor",
+            "detect",
+            "--db",
+            str(source),
+            "--output-dir",
+            str(tmp_path / "out"),
+        ],
+    )
+    main()
+    result = json.loads(capsys.readouterr().out)
+    assert result["alert_event_counts"]["opened"] == 1
+    assert result["active_alert_count"] == 1
+    assert (tmp_path / "out/test.alerts.jsonl").is_file()

@@ -231,6 +231,12 @@ class MotionRules:
                 "threshold_confirmation_seconds": config.descent_confirmation_seconds,
                 "quality_flags": features["quality_flags"],
             }
+            gradient_text = (
+                f"ground-path angle {gradient:.2f} deg; "
+                if gradient is not None
+                else "ground-path angle unavailable; "
+            )
+            acceleration_text = f"sample acceleration {acceleration:.2f} m/s2; " if abrupt else ""
             candidates.append(
                 AlertCandidate(
                     "unusual_descent",
@@ -241,7 +247,7 @@ class MotionRules:
                     obs.api_time,
                     evidence,
                     f"Vertical speed {vr:.2f} m/s; "
-                    f"confirmed for {confirmed_for} s; "
+                    f"{gradient_text}{acceleration_text}qualifying samples span {confirmed_for} s; "
                     f"{context['airport_distance_m'] / 1000:.1f} km "
                     f"from {context['nearest_configured_airport']}.",
                     (

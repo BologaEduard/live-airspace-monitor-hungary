@@ -11,10 +11,9 @@ BME MSc – AI in Practice (2026) Homework Assignment #1.
 
 Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLite
 recordings, causal telemetry auditing, incremental trajectory segmentation,
-sliding-window kinematic features, derived JSONL exports, and offline tests.
+sliding-window kinematic features, rule-based recording analysis, evidence-backed
+alert lifecycles, derived JSONL exports, and offline tests.
 The existing access-check script is also available.
-Motion-rule components and alert lifecycle tracking are implemented and tested;
-recording-based rule orchestration is the next integration step.
 ML training/evaluation and the web application are planned;
 they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
 
@@ -36,7 +35,7 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
 `storage`, `recordings`, `exports`, `preprocess`, `trajectories`, `geo`, `features`,
-`airspace`, `rules`, `alerts`, and `cli`.
+`airspace`, `rules`, `alerts`, `continuity`, `detector`, and `cli`.
 Planned modules:
 `anomaly_detector`, `benchmark`, `evaluate`, and `app`.
 
@@ -291,6 +290,97 @@ prefixes without future data. Exports are repeatable and protect existing comple
 on malformed input. After collection ends, rerun **audit then features** for all available
 points; run `segment` as well if a separate trajectory export is needed.
 
+## Screen recorded airspace with deterministic rules
+
+```powershell
+.\.venv\Scripts\python.exe -m airspace_monitor detect --db data/raw/opensky.sqlite3
+```
+
+This offline command reads raw polls directly. It needs no credentials, makes no network
+requests, and reuses the telemetry audit and feature extractor internally. Raw poll
+presence/contact and provider failures are essential for continuity; a cleaned-position
+or feature file alone is insufficient. The collector currently records data only;
+continuous live inference, notifications, and a web inspector are not implemented yet.
+
+Outputs under `data/processed` (or `--output-dir`):
+
+- `<recording>.alerts.jsonl`: opened/updated/closed events with stable alert IDs,
+  severity, ICAO24, source attempt/API time, numeric evidence, readable physical evidence,
+  and explicit limitations. Event/first-seen/last-seen times are Unix UTC seconds based
+  on collection completion. An unknown event time remains null.
+- `<recording>.source-events.jsonl`: provider, timing, scope, and source-health uncertainty
+  with source attempt, HTTP status, and outcome. Cached nonadvancing snapshots are
+  diagnostic events, not new measurements or automatically provider failures.
+- `<recording>.detection.json`: complete rule/window configuration, audit diagnostics,
+  source-prefix ID, source-health and lifecycle counts, opened counts by type, continuity
+  abstention reasons, total active count, and up to five severity-ranked active alerts.
+
+### Initial screening thresholds
+
+`RuleConfig` records all thresholds in the report. These are initial engineering
+heuristics to be calibrated on training/validation data. A threshold crossing is not
+a verified abnormal flight, emergency, or calibrated probability. Planned fast descents
+can exceed the rate threshold; precision and recall have not been established yet.
+
+| Alert type | Required evidence |
+| --- | --- |
+| `holding_pattern` (info) | Ready window; absolute **signed net turn** at least 360 deg; signed/absolute turn coherence at least 0.8; sample-centred radius and net progress each at most 10 km; straightness at most 0.35; latest speed at least 50 m/s |
+| `unusual_descent` (warning) | Rate at most -15 m/s **or** ground-path angle at most -6 deg with rate at most -8 m/s and speed at least 50 m/s; qualifying samples span at least 15 s with no adjacent confirmation gap over 30 s |
+| `unusual_descent` (immediate) | Rate at most -30 m/s (critical), or estimated vertical acceleration at most -1.5 m/s² with current rate at most -12 m/s and no sparse-window flag (warning) |
+| `emergency_squawk` (critical) | Fresh airborne contact reporting exactly `7500`, `7600`, or `7700`; this is a separate code observation, not evidence of descent |
+| `signal_loss` (warning) | Contact gap at least 60 s, known airborne position no older than 180 s, last barometric altitude above 1500 m, known speed/track, source witnesses, and passing boundary/airport guards |
+
+Holding-like motion can be an ordinary ATC procedure. The tested normal 75 m/s,
+three-degree approach-like descent stays below these screening thresholds; airport
+proximity does not blanket-suppress extreme descent. Airport locations are reference
+points from the [OurAirports primary dataset](https://github.com/davidmegginson/ourairports-data),
+checked on 2026-11-26: LHBP `(47.43018, 19.262393)`, LHDC `(47.489469, 21.616278)`,
+and LHSM `(46.686391, 17.159084)`. No runway alignment or ILS procedure is inferred.
+Emergency-code descriptions follow [EASA SERA documentation](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-standardised-european?erules-id=ERULES-1963177438-9921).
+An observed code is not independent confirmation of the corresponding emergency.
+
+### Continuity and source-health guards
+
+- The source must have fresh airborne contacts. Ground-only, empty, all-stale, failed,
+  or malformed responses cannot justify individual disappearance alerts.
+- API time must not be ahead of collection completion or more than 30 s behind it.
+  Repeated API time does not advance inference; regressed API/capture time is uncertainty.
+- A source-poll interval over 45 s, or disappearance of at least half the previous fresh
+  airborne population when that population had at least five members, clears old loss
+  baselines. Recovery rearms only aircraft actually observed after that uncertainty.
+- Runs have independent contact baselines. A changed geographic scope inside the same
+  run is rejected as uncertainty; start a new collection run for a new scope.
+- Contact updates still count when position is duplicate, stale, or missing. Explicit
+  ground observations remove airborne loss eligibility and reset descent confirmation.
+- Last and constant-track projected positions must both remain at least 10 km inside
+  the **observation bounding box**. This is not Hungary's national border or a verified
+  coverage polygon. Implausibly long projections also abstain as possible exits.
+- At barometric altitude up to 3000 m, a last/projected position within 15 km of one of
+  the configured airports suppresses loss screening as a possible arrival. Higher
+  overflights are not automatically treated as landings.
+- Old position context expires after 180 s. A resulting `context_uncertain` close means
+  insufficient evidence to keep the alert active, not proven recovery.
+
+Fresh traffic elsewhere does not establish local receiver coverage, and constant-track
+projection assumes the last known motion continues. Accordingly, `signal_loss` means a
+possible observation/contact gap, not proven transponder failure. No alerts during source
+uncertainty must not be interpreted as confirmed normal airspace.
+
+### Lifecycle and reproducibility
+
+Persistent candidates update one alert ID rather than opening a new alert every poll.
+Closed events distinguish reacquired contact, unavailable observations, source uncertainty,
+and a condition no longer observed. The source-end summary retains whatever was active
+at the last poll; end-of-file does not fabricate future signal-loss observations.
+Duplicate fresh positions may retain already established motion evidence until the audit's
+age limit, with original measurement provenance; emergency code changes can be observed
+even without a new position. Top-five presentation does not discard other alert history.
+
+`RuleEngine.process_poll()` is incremental, deterministic, and uses no future records.
+The offline exporter processes a read-only bounded prefix while collection can continue;
+rerun it at the end for the complete recording. A negative/empty alert result is a
+screening output with data-quality context, not an ML evaluation or ground-truth label.
+
 ## Development checks
 
 ```powershell
@@ -304,7 +394,9 @@ The suite covers credentials precedence, token reuse/refresh, rate limits, malfo
 responses, backoff, quota exhaustion, interruption, append-only persistence, audit
 exclusions, age boundaries, trajectory gaps, run isolation, causal replay prefixes,
 heading wraparound, signed versus absolute turns, closed loops, missing telemetry,
-window readiness, surface geometry, and numerical overflow.
+window readiness, surface geometry, numerical overflow, evidence-backed rules, alert
+lifecycle, source outages/recovery, cached/stale clocks, mass disappearances, border exits,
+airport context, and recorded-poll replay causality.
 See [AGENTS.md](AGENTS.md) for development conventions and
 [the development log](docs/DEVELOPMENT_LOG.md) for AI-assisted work.
 
