@@ -13,7 +13,9 @@ Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLi
 recordings, causal telemetry auditing, incremental trajectory segmentation,
 sliding-window kinematic features, derived JSONL exports, and offline tests.
 The existing access-check script is also available.
-Anomaly detection, ML training/evaluation, and the web application are planned;
+Motion-rule components and alert lifecycle tracking are implemented and tested;
+recording-based rule orchestration is the next integration step.
+ML training/evaluation and the web application are planned;
 they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
 
 ## Folder structure
@@ -33,8 +35,9 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 ```
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
-`storage`, `recordings`, `exports`, `preprocess`, `trajectories`, `geo`, `features`, and `cli`.
-Planned modules: `rules`,
+`storage`, `recordings`, `exports`, `preprocess`, `trajectories`, `geo`, `features`,
+`airspace`, `rules`, `alerts`, and `cli`.
+Planned modules:
 `anomaly_detector`, `benchmark`, `evaluate`, and `app`.
 
 ## Local setup (PowerShell)

@@ -144,3 +144,25 @@ the relevant prompt or request, the resulting change, verification, and any manu
   collector was not restarted. Finalizer status was confirmed as `waiting_for_collector`.
 - No human manual code corrections supplied in this step. No ML model or anomaly rules
   implemented yet. Raw data, derived exports, and process metadata remain local and ignored.
+
+## 2026-11-26 — Motion rules, geographic context, and alert lifecycle
+
+- Request: continue with the deterministic anomaly detector while recording continues.
+- Added explicit, configurable screening rules for localized signed-turn accumulation,
+  sustained rapid/steep descent, abrupt vertical-speed changes, and separately typed
+  emergency squawk observations. These are initial engineering thresholds, not calibrated
+  or operational flight-safety limits. Every candidate carries numeric evidence and limitations.
+- Added airport-reference proximity, bounding-box clearance, and constant-track projection
+  helpers; none is presented as proof of radar coverage or runway/ILS alignment.
+- Verified LHBP/LHDC/LHSM reference coordinates against the primary OurAirports CSV at
+  `https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv`.
+  Verified emergency-code labels against official EASA/FAA documentation. No OpenSky
+  credits were used for this reference lookup.
+- Added stable opened/updated/closed alert identities, explicit uncertainty/reacquisition
+  close reasons, per-type opened-event counts, and a severity-ranked panel capped at five.
+- Verification: **35 targeted motion/context/lifecycle tests passed** within the full
+  offline suite. Cases include north-crossing circles in both directions, zigzags,
+  insufficient/partial evidence, a three-degree approach-like descent, extreme descent
+  near an airport, confirmation gaps, code typing, and lifecycle deduplication.
+- The approach fixture uses coherent moving positions and an altitude profile; it is
+  an analytical unit fixture, not a verified LHBP runway procedure or benchmark label.
