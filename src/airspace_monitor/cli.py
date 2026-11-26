@@ -1,6 +1,7 @@
 """Command-line entry point for bounded OpenSky recording."""
 
 import argparse
+import json
 import logging
 import math
 import sqlite3
@@ -9,6 +10,7 @@ from pathlib import Path
 from airspace_monitor.collector import collect
 from airspace_monitor.config import load_credentials
 from airspace_monitor.opensky_client import OpenSkyClient
+from airspace_monitor.preprocess import audit_recording
 from airspace_monitor.storage import SnapshotStore
 
 
@@ -36,9 +38,33 @@ def main() -> None:
     collector.add_argument("--duration-seconds", type=positive_float, default=3600)
     collector.add_argument("--max-polls", type=positive_int)
     collector.add_argument("--timeout-seconds", type=positive_float, default=15)
+    audit = commands.add_parser("audit", help="Audit a read-only prefix of a recording.")
+    audit.add_argument("--db", type=Path, required=True)
+    audit.add_argument("--output-dir", type=Path, default=Path("data/processed"))
+    audit.add_argument("--max-age-seconds", type=positive_float, default=30)
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
+        return
+    if args.command == "audit":
+        try:
+            report = audit_recording(
+                args.db,
+                args.output_dir,
+                max_age_seconds=args.max_age_seconds,
+            )
+        except (OSError, sqlite3.Error, ValueError):
+            parser.exit(1, "Cannot audit recording; check the input schema and output directory.\n")
+        print(
+            json.dumps(
+                {
+                    "polls": report["polls"],
+                    "counts": report["counts"],
+                    "report": report["outputs"]["report"],
+                },
+                indent=2,
+            )
+        )
         return
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     try:

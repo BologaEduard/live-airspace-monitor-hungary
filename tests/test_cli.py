@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import sys
 
@@ -5,6 +6,9 @@ import pytest
 from conftest import response
 
 from airspace_monitor.cli import main
+from airspace_monitor.config import BoundingBox
+from airspace_monitor.opensky_client import CollectionAttempt
+from airspace_monitor.storage import SnapshotStore
 
 
 def test_no_command_displays_help_without_network(monkeypatch, capsys):
@@ -84,3 +88,45 @@ def test_database_error_closes_client_before_request(monkeypatch, tmp_path, caps
     assert error.value.code == 1 and session.closed
     assert not session.get_calls and not session.post_calls
     assert "database" in capsys.readouterr().err
+
+
+def test_audit_command_needs_no_credentials(monkeypatch, tmp_path, capsys, state_vector):
+    path = tmp_path / "raw" / "test.sqlite3"
+    with SnapshotStore(path) as store:
+        store.save(
+            CollectionAttempt(
+                requested_at="2026-11-26T10:00:00+00:00",
+                completed_at="2026-11-26T10:00:01+00:00",
+                phase="states",
+                outcome="success",
+                api_time=100,
+                raw_body=json.dumps({"time": 100, "states": [state_vector()]}),
+            ),
+            run_id="run1",
+            bbox=BoundingBox(),
+        )
+    monkeypatch.setenv("OPENSKY_CLIENT_ID", "partial-environment-must-not-be-used")
+    monkeypatch.delenv("OPENSKY_CLIENT_SECRET", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "airspace-monitor",
+            "audit",
+            "--db",
+            str(path),
+            "--output-dir",
+            str(tmp_path / "out"),
+        ],
+    )
+    main()
+    result = json.loads(capsys.readouterr().out)
+    assert result["counts"]["accepted_airborne"] == 1
+
+
+def test_audit_missing_source_exits_nonzero_without_creating_database(monkeypatch, tmp_path):
+    path = tmp_path / "missing.sqlite3"
+    monkeypatch.setattr(sys, "argv", ["airspace-monitor", "audit", "--db", str(path)])
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 1 and not path.exists()

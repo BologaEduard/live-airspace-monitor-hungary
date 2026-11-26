@@ -10,8 +10,9 @@ BME MSc – AI in Practice (2026) Homework Assignment #1.
 ## Current status
 
 Implemented: an OAuth2 OpenSky client, bounded data collection, append-only SQLite
-recordings, and offline tests. The existing access-check script is also available.
-Preprocessing, anomaly detection, ML evaluation, and the web application are planned;
+recordings, causal telemetry auditing, derived JSONL exports, and offline tests.
+The existing access-check script is also available.
+Trajectory segmentation, anomaly detection, ML evaluation, and the web application are planned;
 they are not implemented yet. See [SPEC.md](SPEC.md) for the specification.
 
 ## Folder structure
@@ -31,7 +32,7 @@ sample_hungary_states.json  Existing single-snapshot sample, not a replay datase
 ```
 
 The Python package currently contains `config`, `opensky_client`, `collector`,
-`storage`, and `cli`. Planned modules: `preprocess`, `features`, `rules`,
+`storage`, `recordings`, `exports`, `preprocess`, and `cli`. Planned modules: `features`, `rules`,
 `anomaly_detector`, `benchmark`, `evaluate`, and `app`.
 
 ## Local setup (PowerShell)
@@ -116,7 +117,7 @@ A successful OAuth exchange is not a separate recording row; an unsuccessful exc
 produces an authentication-failure row without a states request. Raw telemetry nulls,
 duplicate API timestamps, and empty snapshots are preserved. A failed request has no
 successful snapshot metadata; it must not be interpreted as empty airspace. This layer
-validates only the response envelope; telemetry auditing and trajectory checks come next.
+validates only the response envelope; the separate audit command checks telemetry.
 
 Each row is committed immediately. Reusing the database appends another run without
 overwriting earlier recordings. The SQLite database uses schema version 1.
@@ -132,6 +133,55 @@ credits, and overwrites `sample_hungary_states.json`:
 ```
 
 Never put credentials in source code, browser assets, screenshots, or logs.
+
+## Audit recordings (offline)
+
+```powershell
+.\.venv\Scripts\python.exe -m airspace_monitor audit --db data/raw/opensky.sqlite3
+```
+
+Use the actual recording filename for a separately named session. The command needs
+no credentials and makes no network requests. Defaults: `--max-age-seconds 30` and
+`--output-dir data/processed`. It creates:
+
+- `<recording>.audit.json`: poll outcomes, disjoint tracking dispositions, missing-field
+  counts, raw numeric min/max ranges, analysis eligibility, and source provenance.
+- `<recording>.observations.jsonl`: fresh, unique, airborne position observations with
+  named fields in recording order. Null telemetry stays null; no values are imputed.
+- `<recording>.exclusions.jsonl`: reasons and source attempt/vector indices for rejected
+  observations, incomplete analysis inputs, and unsuccessful/invalid source polls.
+
+The audit rejects malformed vectors (fewer than 17 fields), invalid IDs/types/ranges,
+missing positions/contact times, nonfinite telemetry, future or inconsistent timestamps,
+and positions older than the age limit. Ground records are counted separately. A duplicate
+position timestamp is not a new movement measurement, even if contact time changed;
+older positions arriving later are excluded rather than reordered. Deduplication state
+is independent for each `(run_id, icao24)` pair.
+
+Fresh positions with missing barometric altitude, speed, track, or vertical rate are
+retained for tracking and counted as `analysis_quarantined`; records complete in those
+four fields count as `analysis_eligible`. Eligibility here means basic data availability,
+not that a trajectory window is long enough or physically verified. Missing optional
+squawk/geometric altitude does not by itself quarantine the analysis input.
+
+Counts reconcile as follows:
+
+```text
+raw_vectors = accepted_airborne + all excluded_* counts
+accepted_airborne = analysis_eligible + analysis_quarantined
+```
+
+Missing-field and reason counts can overlap; numeric ranges describe finite values in
+all structurally complete raw vectors, including ground and subsequently excluded rows.
+There is no interpolation or aircraft-disappearance inference. Later continuity detection
+must use raw poll/contact information as well: absence from cleaned positions can be an
+audit exclusion, not signal loss.
+
+The database opens read-only. Its maximum attempt ID is captured at start, so collection
+can continue while the audit processes a bounded prefix in short read batches. The report
+records that ID. Run the audit again after collection ends for the complete session.
+Derived exports are replaced atomically per file on success; this is not a transaction
+across all export files. Use a different directory from the raw database.
 
 ## Development checks
 

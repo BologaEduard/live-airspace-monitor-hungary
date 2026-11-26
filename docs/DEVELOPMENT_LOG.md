@@ -67,3 +67,28 @@ the relevant prompt or request, the resulting change, verification, and any manu
   or raw recordings are included in this documentation commit.
 - This is a single live snapshot, not a trajectory dataset. Multi-hour collection and
   systematic telemetry auditing are still required.
+
+## 2026-11-26 — Background recording and telemetry audit
+
+- Request: begin a multi-hour recording, implement telemetry auditing, and then build
+  trajectory segments; continue committing and pushing logical units.
+- Started one hidden, three-hour collector at `2026-11-26T10:06:41Z`, polling every
+  15 seconds into local `data/raw/session-20261126T100641Z.sqlite3`. Logs and process
+  metadata are in ignored `data/raw/` files. Checked for an already running collector
+  before launch. Collection is ongoing; a completed three-hour dataset is not yet claimed.
+- Added a read-only bounded-prefix recording reader, atomic derived-file exports,
+  named validated observations, incremental telemetry audit, and the offline `audit` CLI.
+- Design: preserve fresh partial telemetry for tracking but explicitly quarantine it
+  for full analysis; preserve nulls, exclude stale/duplicate/late points with reasons,
+  keep independent per-run tracking state, and never classify provider failures as
+  empty-airspace snapshots. Raw recordings are not modified.
+- AI-generated tests cover real zeros, missing optional versus required fields,
+  nonfinite values, causal timestamps, malformed rows, age boundaries, run isolation,
+  source preservation, concurrent appends, safe export replacement, and credential-free CLI use.
+- Review correction: guard numeric validation against oversized Python integers that
+  overflow float conversion. No human manual code corrections were supplied.
+- Verification: Ruff passed and all **96 tests** in the collector/audit suite passed.
+  The uncommitted trajectory module is excluded from this checkpoint's test count.
+  A live-data audit of the first 20 completed polls found 2,314 raw vectors,
+  709 ground exclusions, 1,605 accepted airborne observations, and one incomplete
+  analysis input. These are prefix statistics, not final session totals.

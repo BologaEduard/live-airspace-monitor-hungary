@@ -83,3 +83,45 @@ def client_factory():
         return client, session
 
     return make
+
+
+@pytest.fixture
+def state_vector():
+    def make(at=100, icao24="abc123", **fields):
+        row = [
+            icao24,
+            " TEST1  ",
+            "Hungary",
+            at,
+            at,
+            19.1,
+            47.5,
+            10000,
+            False,
+            220,
+            359,
+            0,
+            None,
+            10030,
+            "1234",
+            False,
+            0,
+        ]
+        indices = {
+            "time_position": 3,
+            "last_contact": 4,
+            "longitude": 5,
+            "latitude": 6,
+            "baro_altitude": 7,
+            "on_ground": 8,
+            "velocity": 9,
+            "true_track": 10,
+            "vertical_rate": 11,
+            "geo_altitude": 13,
+            "squawk": 14,
+        }
+        for name, value in fields.items():
+            row[indices[name]] = value
+        return row
+
+    return make
