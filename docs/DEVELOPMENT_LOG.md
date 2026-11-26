@@ -202,3 +202,23 @@ the relevant prompt or request, the resulting change, verification, and any manu
 - No human manual code corrections supplied. No ML training, quantitative benchmark,
   application deployment, or DNS modification occurred. All recording/derived data and
   process metadata remain local and ignored by Git.
+
+## 2026-11-26 — Read-only local preview API
+
+- Tool: Codex. User moved the first local website ahead of the synthetic benchmark;
+  collection should continue independently. Implemented a bounded presentation adapter,
+  optional FastAPI application, and `serve` command bound only to `127.0.0.1`.
+- Reads at most 48 recent successful polls from the newest successful run. Snapshot
+  times advance strictly; future positions, malformed coordinates and scope are rejected.
+  Missing telemetry stays null, zero stays zero, stale positions are explicitly flagged.
+  Recording freshness, source interruption, empty data and uncertain clocks are distinct.
+- Matching detector exports supply historical candidates only. The browser can restrict
+  visibility by source time, capture time and attempt ID; no inference or OpenSky call
+  is added to the preview. Static serving is limited to the built public frontend directory.
+- Verification: **229 offline Python tests passed**, Ruff passed. Added bounded/read-only,
+  run-isolation, null/zero, malformed/stale telemetry, source-health, analysis-provenance,
+  static traversal and arbitrary-file query tests using synthetic fixtures.
+- One upstream Starlette TestClient deprecation warning remains for its supported `httpx`
+  adapter; it does not fail these checks. No human manual code corrections supplied.
+- Existing raw recording and waiting finalizer were left running. No credentials read,
+  DNS changes, public deployment, synthetic benchmark or model training performed.

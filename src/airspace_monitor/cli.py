@@ -60,9 +60,31 @@ def main() -> None:
     detector = commands.add_parser("detect", help="Run rule-based screening on recorded polls.")
     detector.add_argument("--db", type=Path, required=True)
     detector.add_argument("--output-dir", type=Path, default=Path("data/processed"))
+    serve = commands.add_parser("serve", help="Open the local web preview on loopback only.")
+    serve.add_argument(
+        "--db", type=Path, help="Recording to read; defaults to the newest local recording."
+    )
+    serve.add_argument("--port", type=positive_int, default=8000)
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
+        return
+    if args.command == "serve":
+        if args.port > 65535:
+            parser.error("Port must be at most 65535.")
+        try:
+            import uvicorn
+
+            from airspace_monitor.app import create_app
+            from airspace_monitor.preview import latest_recording
+        except ImportError:
+            parser.exit(1, 'Install the web extra first: python -m pip install -e ".[web]"\n')
+        root = Path(__file__).resolve().parents[2]
+        web_dir = root / "web" / "dist"
+        if not (web_dir / "index.html").is_file():
+            parser.exit(1, "Frontend build missing. Run npm.cmd --prefix web run build.\n")
+        recording = args.db if args.db is not None else latest_recording(root / "data" / "raw")
+        uvicorn.run(create_app(recording, web_dir), host="127.0.0.1", port=args.port)
         return
     if args.command == "features":
         try:
